@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>هيلثي آند تيستي — إدارة فريق المبيعات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --purple-deep:#3D1A6E; --purple-brand:#5B2D8E; --purple-mid:#7B4DB5;
+  --purple-light:#A67DD4; --purple-pale:#E8D8F8; --purple-ghost:#F5EEFF;
+  --accent-gold:#E8B84B; --accent-mint:#4ECBA4; --accent-coral:#F06B6B; --accent-sky:#5BB8F5;
+  --white:#FFFFFF; --grey-1:#F8F7FC; --grey-2:#EDE8F5; --grey-3:#C5B8D8;
+  --text-dark:#1E1128; --text-mid:#4A3D5C; --text-light:#8A7A9E;
+  --shadow-sm:0 2px 8px rgba(91,45,142,0.08); --shadow-md:0 8px 32px rgba(91,45,142,0.14);
+  --shadow-lg:0 20px 60px rgba(91,45,142,0.2);
+  --radius-sm:8px; --radius-md:16px; --radius-lg:24px; --radius-xl:32px;
+  --font-body:'Cairo',sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --sidebar-width:270px; --header-height:68px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-body);background:var(--grey-1);color:var(--text-dark);overflow-x:hidden;}
+
+/* ══ LOGIN ══ */
+#loginScreen{min-height:100vh;background:linear-gradient(135deg,#1a0a3c 0%,var(--purple-deep) 40%,var(--purple-brand) 75%,var(--purple-mid) 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.login-card{background:white;border-radius:var(--radius-xl);width:480px;box-shadow:var(--shadow-lg),0 0 100px rgba(91,45,142,0.35);overflow:hidden;animation:slideUp 0.6s cubic-bezier(0.16,1,0.3,1);}
+@keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+.login-top{background:linear-gradient(135deg,var(--purple-deep),var(--purple-brand));padding:36px 40px 30px;text-align:center;position:relative;}
+.login-top::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:28px;background:white;border-radius:28px 28px 0 0;}
+.login-logo-icon{width:76px;height:76px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.25);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.login-brand{font-size:24px;font-weight:800;color:white;}
+.login-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-top:3px;}
+.login-body{padding:24px 36px 36px;}
+.login-heading{font-size:20px;font-weight:800;color:var(--text-dark);margin-bottom:3px;}
+.login-subheading{font-size:13px;color:var(--text-light);margin-bottom:22px;}
+.role-selector{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:22px;}
+.role-btn{padding:14px 8px 12px;border:2px solid var(--grey-2);border-radius:var(--radius-md);cursor:pointer;text-align:center;background:var(--grey-1);font-family:var(--font-body);transition:all 0.2s;}
+.role-btn:hover{border-color:var(--purple-light);transform:translateY(-1px);}
+.role-btn.active{border-color:var(--purple-brand);background:var(--purple-ghost);box-shadow:0 4px 14px rgba(91,45,142,0.18);}
+.role-btn .ri{font-size:26px;display:block;margin-bottom:6px;}
+.role-btn .rl{font-size:14px;font-weight:800;color:var(--text-mid);display:block;}
+.role-btn .rd{font-size:10px;color:var(--text-light);display:block;margin-top:2px;}
+.role-btn.active .rl{color:var(--purple-brand);}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:13px;font-weight:700;color:var(--text-mid);margin-bottom:6px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border:1.5px solid var(--grey-2);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:14px;color:var(--text-dark);background:white;transition:all 0.2s;outline:none;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--purple-brand);box-shadow:0 0 0 3px rgba(91,45,142,0.1);}
+.btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--purple-brand),var(--purple-mid));color:white;border:none;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 14px rgba(91,45,142,0.3);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(91,45,142,0.38);}
+
+/* ══ APP ══ */
+#appShell{display:none;min-height:100vh;}
+#appShell.active{display:flex;flex-direction:row-reverse;}
+
+/* ══ SIDEBAR ══ */
+.sidebar{width:var(--sidebar-width);min-height:100vh;background:linear-gradient(180deg,var(--purple-deep) 0%,#2a1050 100%);display:flex;flex-direction:column;position:fixed;top:0;right:0;z-index:100;}
+.sidebar-logo{padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.logo-row{display:flex;align-items:center;gap:11px;}
+.logo-circle{width:42px;height:42px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sidebar-logo h2{font-size:14px;font-weight:800;color:white;line-height:1.2;}
+.sidebar-logo p{font-size:10px;color:rgba(255,255,255,0.4);}
+.sidebar-user{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:11px;}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple-light),var(--accent-mint));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0;}
+.user-info .user-name{font-size:13px;font-weight:700;color:white;}
+.user-info .user-role{font-size:10px;color:rgba(255,255,255,0.45);}
+.sidebar-nav{padding:12px 8px;flex:1;overflow-y:auto;}
+.nav-section-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.28);letter-spacing:1.5px;padding:7px 12px 5px;margin-top:5px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:var(--radius-sm);cursor:pointer;color:rgba(255,255,255,0.58);font-size:13.5px;font-weight:600;transition:all 0.2s;margin-bottom:1px;}
+.nav-item:hover{background:rgba(255,255,255,0.08);color:white;}
+.nav-item.active{background:var(--purple-brand);color:white;box-shadow:0 4px 14px rgba(91,45,142,0.5);}
+.nav-item .nav-icon{font-size:17px;flex-shrink:0;}
+.nav-badge{margin-right:auto;background:var(--accent-coral);color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;}
+/* RED LOGOUT */
+.sidebar-footer{padding:14px 18px;border-top:1px solid rgba(255,255,255,0.08);}
+.logout-btn{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:var(--radius-sm);cursor:pointer;color:white;font-size:13px;font-weight:700;transition:all 0.2s;background:rgba(240,107,107,0.2);border:1.5px solid rgba(240,107,107,0.4);width:100%;}
+.logout-btn:hover{background:var(--accent-coral);border-color:var(--accent-coral);}
+.logout-btn span:first-child{font-size:17px;}
+
+/* ══ MAIN ══ */
+.main-content{margin-right:var(--sidebar-width);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:var(--header-height);background:white;border-bottom:1px solid var(--grey-2);display:flex;align-items:center;padding:0 26px;gap:10px;position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm);}
+.breadcrumb-nav{display:flex;align-items:center;gap:6px;flex:1;}
+.back-btn{display:none;align-items:center;gap:7px;padding:7px 14px;background:var(--purple-ghost);border:1.5px solid var(--purple-pale);border-radius:var(--radius-sm);cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:700;color:var(--purple-brand);transition:all 0.2s;}
+.back-btn:hover{background:var(--purple-pale);}
+.back-btn.visible{display:flex;}
+.bc-item{font-size:13px;font-weight:600;color:var(--text-light);cursor:pointer;padding:5px 8px;border-radius:6px;transition:all 0.15s;}
+.bc-item:hover{color:var(--purple-brand);background:var(--purple-ghost);}
+.bc-item.active{color:var(--text-dark);font-weight:700;}
+.bc-sep{color:var(--grey-3);font-size:12px;}
+.topbar-actions{display:flex;align-items:center;gap:8px;}
+.icon-btn-sm{width:34px;height:34px;border-radius:var(--radius-sm);border:1.5px solid var(--grey-2);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:all 0.2s;position:relative;}
+.icon-btn-sm:hover{background:var(--grey-1);border-color:var(--purple-light);}
+.notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--accent-coral);border-radius:50%;border:2px solid white;}
+.page-nav-tabs{background:white;border-bottom:2px solid var(--grey-2);padding:0 26px;display:flex;align-items:center;gap:2px;overflow-x:auto;}
+.pnt{padding:13px 18px;font-size:13.5px;font-weight:700;color:var(--text-light);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all 0.2s;display:flex;align-items:center;gap:7px;margin-bottom:-2px;}
+.pnt:hover{color:var(--purple-brand);}
+.pnt.active{color:var(--purple-brand);border-bottom-color:var(--purple-brand);background:var(--purple-ghost);border-radius:8px 8px 0 0;}
+.pnt .tb{background:var(--accent-coral);color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;}
+
+/* ══ PAGE ══ */
+.page-content{padding:26px;flex:1;}
+.screen{display:none;}
+.screen.active{display:block;animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;}
+.page-header-title{font-size:21px;font-weight:800;color:var(--text-dark);}
+.page-header-sub{font-size:13px;color:var(--text-light);margin-top:3px;}
+
+/* ══ METRICS ══ */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
+.metric-card{background:white;border-radius:var(--radius-md);padding:20px;box-shadow:var(--shadow-sm);border:1px solid var(--grey-2);position:relative;overflow:hidden;transition:all 0.2s;}
+.metric-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc,var(--purple-brand));}
+.metric-icon{width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:11px;background:var(--mb,var(--purple-ghost));}
+.metric-value{font-family:var(--font-mono);font-size:24px;font-weight:500;color:var(--text-dark);margin-bottom:4px;}
+.metric-label{font-size:12px;color:var(--text-light);font-weight:600;}
+.metric-change{font-size:11px;font-weight:700;margin-top:5px;}
+.metric-change.up{color:var(--accent-mint);}
+.metric-change.down{color:var(--accent-coral);}
+
+/* ══ TOP PERFORMERS ══ */
+.top-performers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px;}
+.performer-card{background:white;border-radius:var(--radius-md);padding:20px;box-shadow:var(--shadow-sm);border:1px solid var(--grey-2);position:relative;overflow:hidden;}
+.performer-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--pc,var(--purple-brand));}
+.performer-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.performer-badge{font-size:26px;}
+.performer-title{font-size:13px;font-weight:700;color:var(--text-light);}
+.performer-name{font-size:16px;font-weight:800;color:var(--text-dark);margin-top:2px;}
+.performer-avatar{width:44px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:white;flex-shrink:0;}
+.performer-stat{font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--text-dark);}
+.performer-stat-label{font-size:11px;color:var(--text-light);margin-top:2px;}
+.performer-bar-wrap{margin-top:14px;}
+.performer-bar{height:6px;background:var(--grey-2);border-radius:10px;overflow:hidden;margin-top:4px;}
+.performer-bar-fill{height:100%;border-radius:10px;background:var(--pc,var(--purple-brand));}
+
+/* ══ CHARTS ══ */
+.charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:22px;}
+.chart-card{background:white;border-radius:var(--radius-md);padding:20px;box-shadow:var(--shadow-sm);border:1px solid var(--grey-2);}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.card-title{font-size:14px;font-weight:700;color:var(--text-dark);}
+.card-subtitle{font-size:11px;color:var(--text-light);margin-top:2px;}
+.chart-tabs{display:flex;gap:3px;background:var(--grey-1);padding:3px;border-radius:var(--radius-sm);}
+.chart-tab{padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text-light);transition:all 0.2s;border:none;background:none;font-family:var(--font-body);}
+.chart-tab.active{background:white;color:var(--purple-brand);box-shadow:var(--shadow-sm);}
+.chart-svg{width:100%;overflow:visible;}
+.donut-legend{display:flex;flex-direction:column;gap:9px;margin-top:14px;}
+.legend-item{display:flex;align-items:center;gap:8px;}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.legend-text{font-size:12px;color:var(--text-mid);flex:1;}
+.legend-val{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--text-dark);}
+
+/* ══ TABLE ══ */
+.table-card{background:white;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--grey-2);overflow:hidden;margin-bottom:20px;}
+.table-header{padding:16px 20px;border-bottom:1px solid var(--grey-2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.table-title{font-size:14px;font-weight:700;color:var(--text-dark);}
+.search-input{position:relative;}
+.search-input input{padding:7px 13px 7px 36px;border:1.5px solid var(--grey-2);border-radius:var(--radius-sm);font-size:13px;font-family:var(--font-body);color:var(--text-dark);background:var(--grey-1);outline:none;width:190px;transition:all 0.2s;}
+.search-input input:focus{border-color:var(--purple-brand);background:white;}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-light);font-size:12px;}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:10px 16px;text-align:right;font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--text-light);background:var(--grey-1);border-bottom:1px solid var(--grey-2);}
+tbody tr{border-bottom:1px solid var(--grey-2);transition:background 0.15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--purple-ghost);}
+tbody td{padding:12px 16px;font-size:13px;color:var(--text-dark);vertical-align:middle;}
+.td-mono{font-family:var(--font-mono);font-size:12px;}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.status-badge.completed{background:rgba(78,203,164,0.15);color:#2A9775;}
+.status-badge.pending{background:rgba(232,184,75,0.15);color:#B8861A;}
+.status-badge.cancelled{background:rgba(240,107,107,0.15);color:#C94040;}
+.status-badge.inprogress{background:rgba(91,184,245,0.15);color:#2878B0;}
+.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+.chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+.chip-purple{background:rgba(91,45,142,0.1);color:var(--purple-brand);}
+.chip-mint{background:rgba(78,203,164,0.12);color:#1E8065;}
+.chip-gold{background:rgba(232,184,75,0.15);color:#9A6A00;}
+.chip-sky{background:rgba(91,184,245,0.12);color:#1A6FA0;}
+.chip-coral{background:rgba(240,107,107,0.12);color:#B83030;}
+
+/* ══ AGENTS ══ */
+.agents-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;}
+.agent-card{background:white;border-radius:var(--radius-md);padding:20px;box-shadow:var(--shadow-sm);border:1px solid var(--grey-2);transition:all 0.2s;}
+.agent-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--purple-light);}
+.agent-card-top{display:flex;align-items:flex-start;gap:11px;margin-bottom:14px;}
+.agent-avatar-lg{width:48px;height:48px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;flex-shrink:0;}
+.agent-card-info .agent-name{font-weight:700;font-size:14px;color:var(--text-dark);}
+.agent-card-info .agent-code{font-family:var(--font-mono);font-size:11px;color:var(--text-light);margin-top:2px;}
+.agent-online-badge{margin-right:auto;display:flex;align-items:center;gap:4px;font-size:11px;color:var(--accent-mint);font-weight:700;}
+.online-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-mint);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.3)}}
+.agent-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+.agent-stat{text-align:center;padding:8px 4px;background:var(--grey-1);border-radius:var(--radius-sm);}
+.agent-stat-val{font-family:var(--font-mono);font-size:15px;font-weight:500;color:var(--text-dark);}
+.agent-stat-label{font-size:10px;color:var(--text-light);margin-top:1px;font-weight:600;}
+.agent-actions{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--grey-2);}
+
+/* ══ FORM ══ */
+.form-card{background:white;border-radius:var(--radius-md);box-shadow:var(--shadow-sm);border:1px solid var(--grey-2);overflow:hidden;}
+.form-card-header{padding:20px 24px;background:linear-gradient(135deg,var(--purple-deep),var(--purple-brand));color:white;}
+.form-card-header h2{font-size:18px;font-weight:800;margin-bottom:3px;}
+.form-card-header p{font-size:12px;opacity:0.7;}
+.form-card-body{padding:24px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-grid.three-col{grid-template-columns:1fr 1fr 1fr;}
+.form-grid.full-col{grid-template-columns:1fr;}
+.form-section-title{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text-light);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--grey-2);}
+.visit-type-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:20px;}
+.visit-type-btn{padding:14px 10px;border:2px solid var(--grey-2);border-radius:var(--radius-md);cursor:pointer;text-align:center;transition:all 0.2s;background:white;font-family:var(--font-body);}
+.visit-type-btn:hover{border-color:var(--purple-light);background:var(--purple-ghost);}
+.visit-type-btn.active{border-color:var(--purple-brand);background:var(--purple-ghost);}
+.visit-type-icon{font-size:24px;display:block;margin-bottom:6px;}
+.visit-type-name{font-size:13px;font-weight:700;color:var(--text-dark);}
+.visit-type-desc{font-size:10px;color:var(--text-light);margin-top:2px;}
+.timestamp-badge{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:var(--purple-ghost);border:1px solid var(--purple-pale);border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:12px;color:var(--purple-brand);font-weight:500;}
+.product-line{display:flex;align-items:center;gap:9px;padding:11px 13px;background:var(--grey-1);border-radius:var(--radius-sm);margin-bottom:7px;border:1px solid var(--grey-2);}
+.product-line-name{flex:1;}
+.product-qty-control{display:flex;align-items:center;gap:5px;}
+.qty-btn{width:26px;height:26px;border-radius:6px;border:1.5px solid var(--grey-2);background:white;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;color:var(--purple-brand);font-weight:700;}
+.qty-btn:hover{background:var(--purple-ghost);border-color:var(--purple-brand);}
+.qty-val{font-family:var(--font-mono);font-size:13px;font-weight:600;min-width:22px;text-align:center;}
+.form-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px;padding-top:20px;border-top:1px solid var(--grey-2);}
+.btn-secondary{padding:11px 20px;background:white;color:var(--purple-brand);border:1.5px solid var(--purple-brand);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.btn-secondary:hover{background:var(--purple-ghost);}
+
+/* ══ TASKS ══ */
+.task-list{display:flex;flex-direction:column;gap:9px;}
+.task-item{background:white;border-radius:var(--radius-md);padding:14px 18px;border:1px solid var(--grey-2);display:flex;align-items:flex-start;gap:13px;transition:all 0.2s;cursor:pointer;}
+.task-item:hover{border-color:var(--purple-light);box-shadow:var(--shadow-sm);}
+.task-item.urgent{border-right:4px solid var(--accent-coral);}
+.task-item.normal{border-right:4px solid var(--accent-mint);}
+.task-icon{width:38px;height:38px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;background:var(--purple-ghost);}
+.task-info .task-title{font-weight:700;font-size:13px;color:var(--text-dark);margin-bottom:3px;}
+.task-info .task-meta{font-size:11px;color:var(--text-light);}
+.task-actions{margin-right:auto;display:flex;align-items:center;gap:7px;}
+.alert-banner{display:flex;align-items:center;gap:11px;padding:12px 16px;border-radius:var(--radius-md);margin-bottom:18px;font-size:13px;}
+.alert-banner.info{background:rgba(91,184,245,0.1);border:1px solid rgba(91,184,245,0.3);color:#1B6FA0;}
+
+/* ══ PROGRESS ══ */
+.progress-bar-wrap{margin-bottom:11px;}
+.progress-bar-label{display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;}
+.progress-bar-label span:first-child{color:var(--text-mid);font-weight:600;}
+.progress-bar-label span:last-child{font-family:var(--font-mono);color:var(--text-dark);font-weight:600;}
+.progress-track{height:7px;background:var(--grey-2);border-radius:20px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--purple-brand),var(--purple-light));transition:width 0.8s cubic-bezier(0.16,1,0.3,1);}
+.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+
+/* ══ REPORT EMP CARDS ══ */
+.report-emp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
+.report-emp-card{background:white;border-radius:var(--radius-md);padding:18px;box-shadow:var(--shadow-sm);border:1px solid var(--grey-2);cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;}
+.report-emp-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--ec,var(--purple-brand));}
+.report-emp-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:var(--purple-light);}
+.report-emp-card-top{display:flex;align-items:center;gap:10px;margin-bottom:13px;}
+.report-emp-avatar{width:42px;height:42px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;}
+.report-emp-name{font-weight:700;font-size:13px;color:var(--text-dark);}
+.report-emp-id{font-family:var(--font-mono);font-size:10px;color:var(--text-light);margin-top:1px;}
+.report-emp-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;}
+.report-emp-stat{text-align:center;padding:7px 3px;background:var(--grey-1);border-radius:7px;}
+.report-emp-stat-val{font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--text-dark);}
+.report-emp-stat-label{font-size:9px;color:var(--text-light);margin-top:2px;font-weight:600;}
+.report-emp-card-footer{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--text-light);padding-top:10px;border-top:1px solid var(--grey-2);}
+.view-btn{font-size:11px;font-weight:700;color:var(--purple-brand);}
+
+/* ══ EMP DETAIL ══ */
+.emp-detail-hero{background:linear-gradient(135deg,var(--purple-deep),var(--purple-brand));padding:24px 26px;display:flex;align-items:center;gap:16px;border-radius:var(--radius-md) var(--radius-md) 0 0;}
+.emp-detail-avatar-big{width:60px;height:60px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:white;flex-shrink:0;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.3);}
+.emp-detail-info .name{font-size:19px;font-weight:800;color:white;}
+.emp-detail-info .sub{font-size:12px;color:rgba(255,255,255,0.65);margin-top:2px;}
+.emp-detail-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;padding:18px 20px;background:var(--grey-1);border:1px solid var(--grey-2);border-top:none;margin-bottom:20px;border-radius:0 0 var(--radius-md) var(--radius-md);}
+.emp-kpi{background:white;border-radius:var(--radius-md);padding:14px;text-align:center;border:1px solid var(--grey-2);}
+.emp-kpi-val{font-family:var(--font-mono);font-size:19px;font-weight:600;color:var(--text-dark);}
+.emp-kpi-label{font-size:11px;color:var(--text-light);margin-top:3px;font-weight:600;}
+.emp-detail-filters{display:flex;align-items:center;gap:9px;background:white;border:1px solid var(--grey-2);border-radius:var(--radius-md);padding:13px 18px;margin-bottom:16px;flex-wrap:wrap;}
+.emp-detail-filters label{font-size:13px;font-weight:700;color:var(--text-mid);}
+.emp-detail-filters input[type=date]{padding:7px 11px;border:1.5px solid var(--grey-2);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:12px;color:var(--text-dark);background:white;outline:none;}
+.emp-detail-filters input[type=date]:focus{border-color:var(--purple-brand);}
+
+/* ══ REPORT DATE BAR ══ */
+.report-date-bar{display:flex;align-items:center;gap:9px;background:white;border:1px solid var(--grey-2);border-radius:var(--radius-md);padding:13px 18px;margin-bottom:20px;flex-wrap:wrap;}
+.report-date-bar label{font-size:13px;font-weight:700;color:var(--text-mid);}
+.report-date-bar input[type=date]{padding:7px 11px;border:1.5px solid var(--grey-2);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:12px;color:var(--text-dark);background:white;outline:none;}
+
+/* ══ BUTTONS ══ */
+.btn-icon{padding:8px 16px;background:var(--purple-brand);color:white;border:none;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:5px;}
+.btn-icon:hover{background:var(--purple-deep);transform:translateY(-1px);}
+.btn-filter{padding:7px 14px;background:var(--purple-brand);color:white;border:none;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.btn-filter:hover{background:var(--purple-deep);}
+.btn-reset{padding:7px 12px;background:var(--grey-1);color:var(--text-mid);border:1.5px solid var(--grey-2);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.btn-reset:hover{background:var(--grey-2);}
+.btn-edit{padding:5px 11px;background:rgba(91,45,142,0.1);color:var(--purple-brand);border:1px solid rgba(91,45,142,0.25);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.btn-edit:hover{background:var(--purple-ghost);}
+.btn-del{padding:5px 11px;background:rgba(240,107,107,0.1);color:var(--accent-coral);border:1px solid rgba(240,107,107,0.3);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.btn-del:hover{background:rgba(240,107,107,0.2);}
+.btn-excel{padding:8px 14px;background:rgba(78,203,164,0.12);color:#1E8065;border:1.5px solid rgba(78,203,164,0.3);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:5px;}
+.btn-excel:hover{background:rgba(78,203,164,0.2);}
+.btn-export{padding:8px 14px;background:rgba(232,184,75,0.12);color:#8A5A00;border:1.5px solid rgba(232,184,75,0.3);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:5px;}
+.btn-export:hover{background:rgba(232,184,75,0.2);}
+
+/* ══ SETTINGS CARDS ══ */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.settings-list-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--grey-2);}
+.settings-list-item:last-child{border-bottom:none;}
+.settings-list-item .item-name{font-size:13px;font-weight:600;color:var(--text-dark);}
+.settings-list-item .item-meta{font-size:11px;color:var(--text-light);margin-top:2px;}
+.settings-add-row{display:flex;gap:8px;padding:14px 16px;border-top:1px solid var(--grey-2);background:var(--grey-1);}
+.settings-add-row input{flex:1;padding:9px 12px;border:1.5px solid var(--grey-2);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;outline:none;}
+.settings-add-row input:focus{border-color:var(--purple-brand);}
+
+/* ══ MODAL ══ */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(30,17,40,0.55);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:white;border-radius:var(--radius-lg);width:560px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:slideUp 0.3s cubic-bezier(0.16,1,0.3,1);}
+.modal.wide{width:700px;}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--grey-2);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:1;}
+.modal-title{font-size:16px;font-weight:800;color:var(--text-dark);}
+.modal-close{width:28px;height:28px;border:1px solid var(--grey-2);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text-light);background:white;transition:all 0.2s;}
+.modal-close:hover{background:var(--grey-1);color:var(--text-dark);}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--grey-2);display:flex;justify-content:flex-end;gap:9px;}
+
+/* ══ TOAST ══ */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--purple-deep);color:white;padding:12px 20px;border-radius:var(--radius-md);font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);z-index:999;display:flex;align-items:center;gap:9px;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-top">
+      <div class="login-logo-icon">
+        <svg width="40" height="40" viewBox="0 0 42 42" fill="none">
+          <path d="M21 6C21 6,13 13,13 21C13 29,17 35,21 35C25 35,29 29,29 21C29 13,21 6,21 6Z" stroke="white" stroke-width="2" fill="none"/>
+          <circle cx="21" cy="21" r="3" fill="white"/>
+        </svg>
+      </div>
+      <div class="login-brand">هيلثي آند تيستي</div>
+      <div class="login-sub">نظام إدارة فريق المبيعات الميداني</div>
+    </div>
+    <div class="login-body">
+      <div class="login-heading">مرحباً بك 👋</div>
+      <div class="login-subheading">اختر صلاحيتك وسجّل دخولك</div>
+      <div class="role-selector">
+        <button class="role-btn active" onclick="selectRole('admin',this)">
+          <span class="ri">🛡️</span><span class="rl">مدير النظام</span><span class="rd">صلاحيات كاملة</span>
+        </button>
+        <button class="role-btn" onclick="selectRole('manager',this)">
+          <span class="ri">📊</span><span class="rl">مدير المبيعات</span><span class="rd">إدارة الفريق</span>
+        </button>
+        <button class="role-btn" onclick="selectRole('agent',this)">
+          <span class="ri">🚗</span><span class="rl">مندوب ميداني</span><span class="rd">تسجيل الزيارات</span>
+        </button>
+      </div>
+      <div class="form-group">
+        <label>رقم الجوال</label>
+        <input type="tel" id="loginPhone" placeholder="05XXXXXXXX" value="0500000001">
+      </div>
+      <div class="form-group">
+        <label>الرقم السري</label>
+        <input type="password" id="loginPass" placeholder="••••••••" value="1234">
+      </div>
+      <div id="loginError" style="color:var(--accent-coral);font-size:12px;font-weight:700;margin-bottom:10px;display:none;">رقم الجوال أو الرقم السري غير صحيح</div>
+      <button class="btn-primary" onclick="doLogin()">دخول ←</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="appShell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-row">
+        <div class="logo-circle">
+          <svg width="20" height="20" viewBox="0 0 42 42" fill="none"><path d="M21 6C21 6,13 13,13 21C13 29,17 34,21 34C25 34,29 29,29 21C29 13,21 6,21 6Z" stroke="white" stroke-width="1.8" fill="none"/><circle cx="21" cy="21" r="2.5" fill="white"/></svg>
+        </div>
+        <div><h2>هيلثي آند تيستي</h2><p>نظام المبيعات الميداني</p></div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sidebarAvatar">أ</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">مدير النظام</div>
+        <div class="user-role" id="sidebarRole">مدير</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">
+        <span>🚪</span><span>تسجيل الخروج</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="breadcrumb-nav">
+        <button class="back-btn" id="backBtn" onclick="goBack()">← رجوع</button>
+        <div id="breadcrumbItems"><span class="bc-item active">لوحة التحكم</span></div>
+      </div>
+      <div class="topbar-actions">
+        <div class="icon-btn-sm">🔔<span class="notif-dot"></span></div>
+        <div class="user-avatar" style="width:32px;height:32px;font-size:12px;" id="topbarAvatar">أ</div>
+      </div>
+    </header>
+    <div class="page-nav-tabs" id="pageNavTabs"></div>
+
+    <div class="page-content">
+
+      <!-- ── لوحة التحكم ── -->
+      <div class="screen active" id="screen-dashboard">
+        <div class="page-header">
+          <div><div class="page-header-title">نظرة عامة</div><div class="page-header-sub" id="dashDate"></div></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-secondary" onclick="showScreen('reports')">عرض التقارير</button>
+            <button class="btn-icon" onclick="showScreen('visits')">+ زيارة جديدة</button>
+          </div>
+        </div>
+        <div class="metrics-grid">
+          <div class="metric-card" style="--mc:#5B2D8E;--mb:#F5EEFF;"><div class="metric-icon">👥</div><div class="metric-value">8</div><div class="metric-label">المندوبون النشطون</div><div class="metric-change up">↑ 2 هذا الشهر</div></div>
+          <div class="metric-card" style="--mc:#4ECBA4;--mb:rgba(78,203,164,0.1);"><div class="metric-icon">📍</div><div class="metric-value">247</div><div class="metric-label">إجمالي الزيارات</div><div class="metric-change up">↑ 18%</div></div>
+          <div class="metric-card" style="--mc:#E8B84B;--mb:rgba(232,184,75,0.1);"><div class="metric-icon">💰</div><div class="metric-value">142K</div><div class="metric-label">إجمالي الإيرادات (ريال)</div><div class="metric-change up">↑ 23%</div></div>
+          <div class="metric-card" style="--mc:#F06B6B;--mb:rgba(240,107,107,0.1);"><div class="metric-icon">📦</div><div class="metric-value">89</div><div class="metric-label">الطلبات المغلقة</div><div class="metric-change down">↓ 4%</div></div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="card-header"><div><div class="card-title">أداء المبيعات</div><div class="card-subtitle">نظرة عامة على الإيرادات</div></div><div class="chart-tabs"><button class="chart-tab active">أسبوع</button><button class="chart-tab">شهر</button><button class="chart-tab">سنة</button></div></div>
+            <svg class="chart-svg" viewBox="0 0 500 200" style="height:190px;">
+              <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5B2D8E" stop-opacity="0.25"/><stop offset="100%" stop-color="#5B2D8E" stop-opacity="0"/></linearGradient></defs>
+              <line x1="40" y1="20" x2="490" y2="20" stroke="#EDE8F5" stroke-width="1"/><line x1="40" y1="60" x2="490" y2="60" stroke="#EDE8F5" stroke-width="1"/><line x1="40" y1="100" x2="490" y2="100" stroke="#EDE8F5" stroke-width="1"/><line x1="40" y1="140" x2="490" y2="140" stroke="#EDE8F5" stroke-width="1"/><line x1="40" y1="180" x2="490" y2="180" stroke="#EDE8F5" stroke-width="1"/>
+              <text x="32" y="24" text-anchor="end" font-size="10" fill="#8A7A9E" font-family="JetBrains Mono">50K</text><text x="32" y="104" text-anchor="end" font-size="10" fill="#8A7A9E" font-family="JetBrains Mono">30K</text><text x="32" y="184" text-anchor="end" font-size="10" fill="#8A7A9E" font-family="JetBrains Mono">10K</text>
+              <path d="M50 120 C100 110 130 80 160 90 C190 100 220 50 270 40 C320 30 350 70 400 60 C440 52 470 80 490 75 L490 180 L50 180Z" fill="url(#ag)"/>
+              <path d="M50 120 C100 110 130 80 160 90 C190 100 220 50 270 40 C320 30 350 70 400 60 C440 52 470 80 490 75" fill="none" stroke="#5B2D8E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="270" cy="40" r="5" fill="#5B2D8E" stroke="white" stroke-width="2"/>
+              <text x="50" y="196" text-anchor="middle" font-size="10" fill="#8A7A9E" font-family="Cairo">الإثنين</text><text x="160" y="196" text-anchor="middle" font-size="10" fill="#8A7A9E" font-family="Cairo">الثلاثاء</text><text x="270" y="196" text-anchor="middle" font-size="10" fill="#8A7A9E" font-family="Cairo">الأربعاء</text><text x="400" y="196" text-anchor="middle" font-size="10" fill="#8A7A9E" font-family="Cairo">الخميس</text><text x="490" y="196" text-anchor="middle" font-size="10" fill="#8A7A9E" font-family="Cairo">الجمعة</text>
+            </svg>
+          </div>
+          <div class="chart-card">
+            <div class="card-header"><div><div class="card-title">أنواع الزيارات</div><div class="card-subtitle">هذا الشهر</div></div></div>
+            <div style="display:flex;justify-content:center;margin-bottom:6px;">
+              <svg viewBox="0 0 160 160" width="140" height="140">
+                <circle cx="80" cy="80" r="55" fill="none" stroke="#EDE8F5" stroke-width="20"/>
+                <circle cx="80" cy="80" r="55" fill="none" stroke="#5B2D8E" stroke-width="20" stroke-dasharray="138 207" stroke-dashoffset="0" stroke-linecap="round"/>
+                <circle cx="80" cy="80" r="55" fill="none" stroke="#4ECBA4" stroke-width="20" stroke-dasharray="83 207" stroke-dashoffset="-138" stroke-linecap="round"/>
+                <circle cx="80" cy="80" r="55" fill="none" stroke="#E8B84B" stroke-width="20" stroke-dasharray="51 207" stroke-dashoffset="-221" stroke-linecap="round"/>
+                <text x="80" y="75" text-anchor="middle" font-size="20" font-weight="600" fill="#1E1128" font-family="JetBrains Mono">247</text>
+                <text x="80" y="92" text-anchor="middle" font-size="10" fill="#8A7A9E" font-family="Cairo">زيارة</text>
+              </svg>
+            </div>
+            <div class="donut-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#5B2D8E"></div><span class="legend-text">زيارات عادية</span><span class="legend-val">138</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#4ECBA4"></div><span class="legend-text">مبيعات</span><span class="legend-val">83</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#E8B84B"></div><span class="legend-text">تحصيلات</span><span class="legend-val">26</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><div class="table-title">أداء المندوبين</div><div class="search-input"><span class="search-icon">🔍</span><input type="text" placeholder="بحث..." oninput="filterTable(this.value)"></div></div>
+          <table><thead><tr><th>المندوب</th><th>الكود</th><th>الزيارات</th><th>المبيعات (ريال)</th><th>التحصيلات (ريال)</th><th>نسبة الإنجاز</th><th>الحالة</th></tr></thead>
+          <tbody id="agentTableBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ── المندوبون ── -->
+      <div class="screen" id="screen-agents">
+        <div class="page-header">
+          <div><div class="page-header-title">مندوبو المبيعات</div><div class="page-header-sub">إدارة فريق العمل الميداني</div></div>
+          <button class="btn-icon" onclick="openModal('modalAddAgent')">+ إضافة مندوب</button>
+        </div>
+        <div class="agents-grid" id="agentsGrid"></div>
+      </div>
+
+      <!-- ── تسجيل زيارة ── -->
+      <div class="screen" id="screen-visits">
+        <div class="page-header"><div><div class="page-header-title">تسجيل زيارة</div><div class="page-header-sub">تسجيل نشاط ميداني جديد</div></div></div>
+        <div class="form-card">
+          <div class="form-card-header"><h2>نشاط ميداني جديد</h2><p>اختر نوع الزيارة وأدخل التفاصيل</p></div>
+          <div class="form-card-body">
+            <div class="form-section-title">نوع النشاط</div>
+            <div class="visit-type-selector">
+              <div class="visit-type-btn active" id="vt-visit" onclick="selectVisitType('visit')"><span class="visit-type-icon">📍</span><div class="visit-type-name">زيارة</div><div class="visit-type-desc">زيارة عميل ومتابعة</div></div>
+              <div class="visit-type-btn" id="vt-sales" onclick="selectVisitType('sales')"><span class="visit-type-icon">🛒</span><div class="visit-type-name">أمر بيع</div><div class="visit-type-desc">بيع منتجات وفاتورة</div></div>
+              <div class="visit-type-btn" id="vt-collect" onclick="selectVisitType('collect')"><span class="visit-type-icon">💵</span><div class="visit-type-name">تحصيل</div><div class="visit-type-desc">تحصيل مدفوعات</div></div>
+            </div>
+            <div style="margin-bottom:16px;"><div class="form-section-title">الوقت والتاريخ</div><div class="timestamp-badge" id="currentTimestamp">🕐 جارٍ التحميل...</div></div>
+            <div class="form-section-title">بيانات العميل</div>
+            <div class="form-grid">
+              <div class="form-group"><label>اسم العميل</label><select id="visitCustomerSelect"><option>-- اختر العميل --</option></select></div>
+              <div class="form-group"><label>المدينة</label><select id="visitRegionSelect"><option>الرياض</option></select></div>
+            </div>
+            <div id="visitFields">
+              <div class="form-section-title">تفاصيل الزيارة</div>
+              <div class="form-grid">
+                <div class="form-group"><label>الحي / المنطقة</label><select><option>العليا</option><option>الملز</option><option>النخيل</option></select></div>
+                <div class="form-group"><label>حالة الزيارة</label><select><option>مكتملة</option><option>تحتاج متابعة</option><option>لا يوجد رد</option><option>تم تأجيلها</option></select></div>
+              </div>
+              <div class="form-grid full-col"><div class="form-group"><label>ملخص الزيارة</label><textarea rows="3" placeholder="ما تم مناقشته أو تحقيقه..."></textarea></div></div>
+            </div>
+            <div id="salesFields" style="display:none;">
+              <div class="form-section-title">المنتجات المطلوبة</div>
+              <div id="productLines"><div class="product-line"><div class="product-line-name"><select style="border:none;background:transparent;font-family:var(--font-body);font-size:13px;outline:none;width:100%;" id="visitProductSelect"><option>-- اختر منتج --</option></select></div><div class="product-qty-control"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-val">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div><div style="font-family:var(--font-mono);font-size:13px;color:var(--purple-brand);min-width:80px;">SAR 120</div></div></div>
+              <button class="btn-secondary" style="margin-bottom:16px;font-size:12px;padding:7px 13px;" onclick="addProductLine()">+ إضافة منتج</button>
+              <div class="form-grid">
+                <div class="form-group"><label>شروط الدفع</label><select><option>نقداً عند التسليم</option><option>آجل 30 يوم</option><option>آجل 60 يوم</option></select></div>
+                <div class="form-group"><label>المبلغ الإجمالي (ريال)</label><input type="text" value="120" placeholder="يُحسب تلقائياً"></div>
+              </div>
+            </div>
+            <div id="collectFields" style="display:none;">
+              <div class="form-section-title">تفاصيل التحصيل</div>
+              <div class="form-grid three-col">
+                <div class="form-group"><label>المبلغ المحصّل (ريال)</label><input type="number" placeholder="0.00"></div>
+                <div class="form-group"><label>طريقة الدفع</label><select><option>نقداً</option><option>تحويل بنكي</option><option>شيك</option><option>نقطة بيع</option></select></div>
+                <div class="form-group"><label>رقم الفاتورة</label><input type="text" placeholder="INV-XXXX"></div>
+              </div>
+            </div>
+            <div class="form-actions"><button class="btn-secondary">إلغاء</button><button class="btn-primary" style="width:auto;padding:11px 28px;" onclick="saveVisit()">حفظ النشاط ←</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── المهام ── -->
+      <div class="screen" id="screen-tasks">
+        <div class="page-header">
+          <div><div class="page-header-title">المهام والتكليفات</div><div class="page-header-sub">إدارة مهام المندوبين والمتابعات</div></div>
+          <button class="btn-icon" onclick="openModal('modalAddTask')">+ تكليف مهمة</button>
+        </div>
+        <div class="alert-banner info"><span>ℹ️</span><span>3 مهام بانتظار الرد من المندوبين. يُرجى المراجعة والمتابعة.</span></div>
+        <div class="task-list" id="taskList"></div>
+      </div>
+
+      <!-- ── التقارير ── -->
+      <div class="screen" id="screen-reports">
+        <div class="page-header">
+          <div><div class="page-header-title">التقارير والإحصاءات</div><div class="page-header-sub">اضغط على كارد المندوب لعرض تفاصيل عملياته</div></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-export" onclick="exportReportExcel()">📥 تصدير Excel</button>
+          </div>
+        </div>
+
+        <!-- الأبطال الثلاثة -->
+        <div style="font-size:15px;font-weight:800;color:var(--text-dark);margin-bottom:12px;">🏆 أفضل المندوبين</div>
+        <div class="top-performers-grid" id="topPerformersGrid"></div>
+
+        <!-- ملخص -->
+        <div class="metrics-grid">
+          <div class="metric-card" style="--mc:#5B2D8E;--mb:#F5EEFF;"><div class="metric-icon">📍</div><div class="metric-value" id="r-visits">247</div><div class="metric-label">إجمالي الزيارات</div></div>
+          <div class="metric-card" style="--mc:#4ECBA4;--mb:rgba(78,203,164,0.1);"><div class="metric-icon">🛒</div><div class="metric-value" id="r-sales">83</div><div class="metric-label">أوامر البيع</div></div>
+          <div class="metric-card" style="--mc:#E8B84B;--mb:rgba(232,184,75,0.1);"><div class="metric-icon">💵</div><div class="metric-value" id="r-collections">26</div><div class="metric-label">التحصيلات</div></div>
+          <div class="metric-card" style="--mc:#F06B6B;--mb:rgba(240,107,107,0.1);"><div class="metric-icon">💰</div><div class="metric-value" id="r-revenue">142K</div><div class="metric-label">الإيرادات (ريال)</div></div>
+        </div>
+
+        <!-- فلتر التاريخ -->
+        <div class="report-date-bar">
+          <span style="font-size:13px;font-weight:700;color:var(--text-dark);">📅 تصفية بالتاريخ:</span>
+          <label>من</label><input type="date" id="reportDateFrom" onchange="filterReportCards()">
+          <label>إلى</label><input type="date" id="reportDateTo" onchange="filterReportCards()">
+          <button class="btn-filter" onclick="filterReportCards()">تطبيق</button>
+          <button class="btn-reset" onclick="resetReportDates()">إعادة تعيين</button>
+        </div>
+
+        <div style="font-size:15px;font-weight:800;color:var(--text-dark);margin-bottom:12px;">أداء جميع المندوبين</div>
+        <div class="report-emp-grid" id="reportEmpGrid"></div>
+
+        <div class="report-grid">
+          <div class="chart-card">
+            <div class="card-header"><div><div class="card-title">ترتيب المندوبين</div><div class="card-subtitle">حسب إجمالي المبيعات</div></div></div>
+            <div id="agentRankings"></div>
+          </div>
+          <div class="chart-card">
+            <div class="card-header"><div><div class="card-title">النشاط اليومي</div><div class="card-subtitle">الزيارات في أيام الأسبوع</div></div></div>
+            <svg class="chart-svg" viewBox="0 0 300 180" style="height:170px;">
+              <defs><linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5B2D8E"/><stop offset="100%" stop-color="#A67DD4"/></linearGradient></defs>
+              <rect x="20" y="100" width="30" height="60" rx="4" fill="url(#bg1)" opacity="0.7"/><rect x="65" y="60" width="30" height="100" rx="4" fill="url(#bg1)" opacity="0.8"/><rect x="110" y="40" width="30" height="120" rx="4" fill="url(#bg1)"/><rect x="155" y="80" width="30" height="80" rx="4" fill="url(#bg1)" opacity="0.75"/><rect x="200" y="50" width="30" height="110" rx="4" fill="url(#bg1)" opacity="0.85"/><rect x="245" y="90" width="30" height="70" rx="4" fill="url(#bg1)" opacity="0.65"/>
+              <text x="35" y="175" text-anchor="middle" font-size="9" fill="#8A7A9E" font-family="Cairo">الإثنين</text><text x="80" y="175" text-anchor="middle" font-size="9" fill="#8A7A9E" font-family="Cairo">الثلاثاء</text><text x="125" y="175" text-anchor="middle" font-size="9" fill="#8A7A9E" font-family="Cairo">الأربعاء</text><text x="170" y="175" text-anchor="middle" font-size="9" fill="#8A7A9E" font-family="Cairo">الخميس</text><text x="215" y="175" text-anchor="middle" font-size="9" fill="#8A7A9E" font-family="Cairo">الجمعة</text><text x="260" y="175" text-anchor="middle" font-size="9" fill="#8A7A9E" font-family="Cairo">السبت</text>
+              <text x="35" y="95" text-anchor="middle" font-size="10" fill="#5B2D8E" font-family="JetBrains Mono" font-weight="600">18</text><text x="80" y="55" text-anchor="middle" font-size="10" fill="#5B2D8E" font-family="JetBrains Mono" font-weight="600">28</text><text x="125" y="35" text-anchor="middle" font-size="10" fill="#5B2D8E" font-family="JetBrains Mono" font-weight="600">42</text><text x="170" y="75" text-anchor="middle" font-size="10" fill="#5B2D8E" font-family="JetBrains Mono" font-weight="600">24</text><text x="215" y="45" text-anchor="middle" font-size="10" fill="#5B2D8E" font-family="JetBrains Mono" font-weight="600">36</text><text x="260" y="85" text-anchor="middle" font-size="10" fill="#5B2D8E" font-family="JetBrains Mono" font-weight="600">22</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── تفاصيل مندوب ── -->
+      <div class="screen" id="screen-empDetail">
+        <div class="emp-detail-hero">
+          <div class="emp-detail-avatar-big" id="edAvatar">م</div>
+          <div class="emp-detail-info"><div class="name" id="edName">اسم المندوب</div><div class="sub" id="edSub">الكود · المنطقة · الجوال</div></div>
+          <div style="margin-right:auto;display:flex;gap:8px;">
+            <button class="btn-export" onclick="exportEmpDetailExcel()">📥 تصدير Excel</button>
+          </div>
+        </div>
+        <div class="emp-detail-kpis" id="edKpis"></div>
+        <div class="emp-detail-filters">
+          <span style="font-size:13px;font-weight:700;color:var(--text-dark);">📅 تصفية:</span>
+          <label>من</label><input type="date" id="edDateFrom" onchange="renderEmpDetailTable()">
+          <label>إلى</label><input type="date" id="edDateTo" onchange="renderEmpDetailTable()">
+          <button class="btn-filter" onclick="renderEmpDetailTable()">تطبيق</button>
+          <button class="btn-reset" onclick="resetEmpDates()">إعادة تعيين</button>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><div class="table-title" id="edTableTitle">جميع العمليات</div><div style="font-size:12px;color:var(--text-light);" id="edCount"></div></div>
+          <table><thead><tr><th>التاريخ والوقت</th><th>العميل</th><th>نوع العملية</th><th>المدينة</th><th>المبلغ (ريال)</th><th>الحالة</th></tr></thead>
+          <tbody id="edTableBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ── الإعدادات ── -->
+      <div class="screen" id="screen-settings">
+        <div class="page-header"><div><div class="page-header-title">إعدادات النظام</div><div class="page-header-sub">إدارة البيانات والمستخدمين والمنتجات</div></div></div>
+
+        <div class="settings-grid" style="margin-bottom:16px;">
+          <!-- المنتجات -->
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-title">المنتجات</div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn-excel" onclick="importExcel('products')">📤 استيراد Excel</button>
+                <button class="btn-export" onclick="exportProductsExcel()">📥 تصدير</button>
+                <button class="btn-icon" style="font-size:12px;padding:6px 12px;" onclick="openModal('modalAddProduct')">+ إضافة</button>
+              </div>
+            </div>
+            <table><thead><tr><th>اسم المنتج</th><th>الكود</th><th>السعر (ريال)</th><th></th></tr></thead><tbody id="productsBody"></tbody></table>
+          </div>
+
+          <!-- العملاء -->
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-title">العملاء</div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn-excel" onclick="importExcel('customers')">📤 استيراد Excel</button>
+                <button class="btn-export" onclick="exportCustomersExcel()">📥 تصدير</button>
+                <button class="btn-icon" style="font-size:12px;padding:6px 12px;" onclick="openModal('modalAddCustomer')">+ إضافة</button>
+              </div>
+            </div>
+            <table><thead><tr><th>اسم العميل</th><th>المدينة</th><th>النوع</th><th></th></tr></thead><tbody id="customersBody"></tbody></table>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <!-- المناطق -->
+          <div class="table-card">
+            <div class="table-header"><div class="table-title">إدارة المناطق</div></div>
+            <div id="regionsList"></div>
+            <div class="settings-add-row">
+              <input type="text" id="newRegionInput" placeholder="اسم المنطقة الجديدة...">
+              <button class="btn-icon" style="font-size:12px;padding:8px 14px;" onclick="addRegion()">+ إضافة</button>
+            </div>
+          </div>
+
+          <!-- المسميات الوظيفية -->
+          <div class="table-card">
+            <div class="table-header"><div class="table-title">المسميات الوظيفية</div></div>
+            <div id="rolesList"></div>
+            <div class="settings-add-row">
+              <input type="text" id="newRoleInput" placeholder="المسمى الوظيفي الجديد...">
+              <button class="btn-icon" style="font-size:12px;padding:8px 14px;" onclick="addJobRole()">+ إضافة</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODALS ══ -->
+<!-- إضافة/تعديل مندوب -->
+<div class="modal-overlay" id="modalAddAgent">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modalAgentTitle">إضافة مندوب جديد</div><button class="modal-close" onclick="closeModal('modalAddAgent')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="editAgentId">
+      <div class="form-grid">
+        <div class="form-group"><label>الاسم الكامل (عربي)</label><input type="text" id="agentNameAr" placeholder="الاسم الكامل"></div>
+        <div class="form-group"><label>الاسم الكامل (إنجليزي)</label><input type="text" id="agentNameEn" placeholder="Full name"></div>
+        <div class="form-group"><label>رقم الموظف</label><input type="text" id="agentId" placeholder="EMP-00X"></div>
+        <div class="form-group"><label>رقم الجوال (لتسجيل الدخول)</label><input type="tel" id="agentPhone" placeholder="05XXXXXXXX"></div>
+        <div class="form-group"><label>الرقم السري</label><input type="text" id="agentPin" placeholder="رقم سري 4 أرقام" maxlength="8"></div>
+        <div class="form-group"><label>المنطقة</label><select id="agentRegion"></select></div>
+        <div class="form-group"><label>المسمى الوظيفي</label><select id="agentJobRole"></select></div>
+        <div class="form-group"><label>الحالة</label><select id="agentStatus"><option value="active">نشط</option><option value="inactive">غير نشط</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modalAddAgent')">إلغاء</button><button class="btn-primary" style="width:auto;padding:11px 26px;" onclick="saveAgent()">حفظ</button></div>
+  </div>
+</div>
+
+<!-- تكليف مهمة -->
+<div class="modal-overlay" id="modalAddTask">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">تكليف مهمة جديدة</div><button class="modal-close" onclick="closeModal('modalAddTask')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>تكليف إلى</label><select id="taskAgentSelect"></select></div>
+      <div class="form-group"><label>نوع المهمة</label><select><option>زيارة عميل</option><option>مكالمة متابعة</option><option>هدف مبيعات</option><option>تحصيل</option><option>مسح ميداني</option></select></div>
+      <div class="form-group"><label>العميل</label><select id="taskCustomerSelect"></select></div>
+      <div class="form-group"><label>تاريخ الاستحقاق</label><input type="date"></div>
+      <div class="form-group"><label>الأولوية</label><select><option>عادية</option><option>عاجلة</option><option>منخفضة</option></select></div>
+      <div class="form-group"><label>التعليمات</label><textarea rows="3" placeholder="تعليمات المهمة للمندوب..."></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modalAddTask')">إلغاء</button><button class="btn-primary" style="width:auto;padding:11px 26px;" onclick="addTask()">تكليف المهمة</button></div>
+  </div>
+</div>
+
+<!-- إضافة منتج -->
+<div class="modal-overlay" id="modalAddProduct">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">إضافة منتج</div><button class="modal-close" onclick="closeModal('modalAddProduct')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>اسم المنتج</label><input type="text" id="newProductName" placeholder="اسم المنتج"></div>
+      <div class="form-grid">
+        <div class="form-group"><label>الكود (SKU)</label><input type="text" id="newProductSku" placeholder="SKU-XXX"></div>
+        <div class="form-group"><label>السعر (ريال)</label><input type="number" id="newProductPrice" placeholder="0.00"></div>
+      </div>
+      <div class="form-group"><label>الفئة</label><select><option>مكملات غذائية</option><option>مشروبات</option><option>وجبات خفيفة</option><option>رعاية صحية</option></select></div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modalAddProduct')">إلغاء</button><button class="btn-primary" style="width:auto;padding:11px 26px;" onclick="addProduct()">إضافة المنتج</button></div>
+  </div>
+</div>
+
+<!-- إضافة عميل -->
+<div class="modal-overlay" id="modalAddCustomer">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">إضافة عميل</div><button class="modal-close" onclick="closeModal('modalAddCustomer')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>اسم العميل</label><input type="text" id="newCustomerName" placeholder="اسم المنشأة"></div>
+      <div class="form-grid">
+        <div class="form-group"><label>المدينة</label><select id="newCustomerCity"></select></div>
+        <div class="form-group"><label>الحي</label><input type="text" placeholder="اسم الحي"></div>
+      </div>
+      <div class="form-group"><label>نوع العميل</label><select id="newCustomerType"><option>صيدلية</option><option>عيادة</option><option>متجر</option><option>موزع</option><option>مستشفى</option></select></div>
+      <div class="form-group"><label>الجوال</label><input type="text" placeholder="+966 XXXXXXXXX"></div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" onclick="closeModal('modalAddCustomer')">إلغاء</button><button class="btn-primary" style="width:auto;padding:11px 26px;" onclick="addCustomer()">إضافة العميل</button></div>
+  </div>
+</div>
+
+<!-- استيراد Excel confirm -->
+<input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleExcelImport(event)">
+
+<div class="toast" id="toast">✅ تم الحفظ</div>
+
+<script>
+// ══ DATA ══
+let currentRole = 'admin';
+let currentScreen = 'dashboard';
+let screenHistory = [];
+let currentEmpName = null;
+let currentImportType = null;
+let editingAgentIndex = -1;
+
+let regionsData = ['الرياض','جدة','الدمام','مكة المكرمة','المدينة المنورة','الطائف','بريدة','تبوك'];
+let jobRolesData = ['مندوب مبيعات','مندوب أول','مشرف مبيعات','مدير منطقة'];
+
+let agentsData = [
+  { id:'EMP-001', name:'Ahmed Al-Rashidi',  nameAr:'أحمد الراشدي',   region:'الرياض',  phone:'0500000001', pin:'1234', jobRole:'مندوب أول',      visits:42, sales:38400, collections:12800, color:'#5B2D8E', status:'active' },
+  { id:'EMP-002', name:'Khalid Bin Saad',   nameAr:'خالد بن سعد',    region:'الرياض',  phone:'0500000002', pin:'1234', jobRole:'مندوب مبيعات',  visits:38, sales:31200, collections:9400,  color:'#4ECBA4', status:'active' },
+  { id:'EMP-003', name:'Omar Al-Ghamdi',    nameAr:'عمر الغامدي',    region:'جدة',     phone:'0500000003', pin:'1234', jobRole:'مشرف مبيعات',  visits:35, sales:28700, collections:7600,  color:'#E8B84B', status:'active' },
+  { id:'EMP-004', name:'Faisal Al-Harbi',   nameAr:'فيصل الحربي',    region:'الرياض',  phone:'0500000004', pin:'1234', jobRole:'مندوب مبيعات',  visits:29, sales:22100, collections:5200,  color:'#F06B6B', status:'active' },
+  { id:'EMP-005', name:'Turki Al-Otaibi',   nameAr:'تركي العتيبي',   region:'الدمام',  phone:'0500000005', pin:'1234', jobRole:'مندوب مبيعات',  visits:27, sales:19800, collections:4900,  color:'#5BB8F5', status:'active' },
+  { id:'EMP-006', name:'Saad Al-Qahtani',   nameAr:'سعد القحطاني',   region:'الرياض',  phone:'0500000006', pin:'1234', jobRole:'مندوب مبيعات',  visits:23, sales:16400, collections:3800,  color:'#A67DD4', status:'inactive' },
+  { id:'EMP-007', name:'Nasser Al-Dosari',  nameAr:'ناصر الدوسري',   region:'جدة',     phone:'0500000007', pin:'1234', jobRole:'مندوب مبيعات',  visits:19, sales:14200, collections:3100,  color:'#F06B6B', status:'active' },
+  { id:'EMP-008', name:'Yazeed Al-Mutairi', nameAr:'يزيد المطيري',   region:'الدمام',  phone:'0500000008', pin:'1234', jobRole:'مندوب مبيعات',  visits:14, sales:9800,  collections:1900,  color:'#4ECBA4', status:'active' },
+];
+
+const ADMIN_PHONE = '0500000000';
+const ADMIN_PIN   = '0000';
+
+let tasksData = [
+  { id:1, agent:'Ahmed Al-Rashidi', customer:'صيدلية النور',        type:'زيارة عميل',    due:'2024-12-18', priority:'urgent', status:'pending',    instructions:'متابعة طلب الربع الرابع وتحصيل المبلغ المستحق.' },
+  { id:2, agent:'Khalid Bin Saad',  customer:'مركز صحة الطبي',      type:'هدف مبيعات',    due:'2024-12-20', priority:'normal', status:'pending',    instructions:'تقديم الخط الجديد من المنتجات وتقديم عرض أسعار.' },
+  { id:3, agent:'Omar Al-Ghamdi',   customer:'متجر الحياة الخضراء', type:'تحصيل',         due:'2024-12-19', priority:'urgent', status:'inprogress', instructions:'تحصيل SAR 4,200 للفاتورة INV-2024-089.' },
+  { id:4, agent:'Faisal Al-Harbi',  customer:'مركز ويلنس',          type:'مكالمة متابعة', due:'2024-12-21', priority:'normal', status:'completed',  instructions:'التحقق من رضا العميل عن المنتج.' },
+  { id:5, agent:'Turki Al-Otaibi',  customer:'منفذ نيتشر كير',      type:'مسح ميداني',    due:'2024-12-22', priority:'normal', status:'pending',    instructions:'تدقيق عرض المنتجات والتقاط صور توثيقية.' },
+];
+
+let activitiesData = [
+  { date:'18 Dec 2024', time:'09:15', agent:'Ahmed Al-Rashidi', customer:'صيدلية النور',        type:'Visit',      city:'الرياض', amount:'-',     status:'completed' },
+  { date:'18 Dec 2024', time:'10:42', agent:'Khalid Bin Saad',  customer:'مركز صحة الطبي',      type:'Sales',      city:'الرياض', amount:'3,200', status:'completed' },
+  { date:'18 Dec 2024', time:'11:30', agent:'Omar Al-Ghamdi',   customer:'متجر الحياة الخضراء', type:'Collection', city:'جدة',    amount:'4,200', status:'completed' },
+  { date:'17 Dec 2024', time:'14:20', agent:'Faisal Al-Harbi',  customer:'عيادة الشفاء',        type:'Visit',      city:'الرياض', amount:'-',     status:'pending'   },
+  { date:'17 Dec 2024', time:'15:55', agent:'Turki Al-Otaibi',  customer:'منفذ نيتشر كير',      type:'Sales',      city:'الدمام', amount:'1,850', status:'completed' },
+  { date:'16 Dec 2024', time:'09:00', agent:'Ahmed Al-Rashidi', customer:'مركز ويلنس',          type:'Sales',      city:'الرياض', amount:'6,400', status:'completed' },
+  { date:'16 Dec 2024', time:'16:10', agent:'Saad Al-Qahtani',  customer:'متجر فيتا',            type:'Collection', city:'الرياض', amount:'2,100', status:'cancelled' },
+  { date:'15 Dec 2024', time:'11:05', agent:'Yazeed Al-Mutairi',customer:'صيدلية حياة',          type:'Visit',      city:'الدمام', amount:'-',     status:'completed' },
+  { date:'15 Dec 2024', time:'13:30', agent:'Khalid Bin Saad',  customer:'مركز النخيل',          type:'Sales',      city:'الرياض', amount:'2,750', status:'completed' },
+  { date:'14 Dec 2024', time:'10:00', agent:'Omar Al-Ghamdi',   customer:'صيدلية الرحمة',        type:'Collection', city:'جدة',    amount:'3,600', status:'completed' },
+  { date:'14 Dec 2024', time:'15:00', agent:'Faisal Al-Harbi',  customer:'مستشفى الملك',         type:'Visit',      city:'الرياض', amount:'-',     status:'completed' },
+  { date:'13 Dec 2024', time:'09:45', agent:'Ahmed Al-Rashidi', customer:'عيادة السلام',         type:'Visit',      city:'الرياض', amount:'-',     status:'completed' },
+  { date:'13 Dec 2024', time:'14:10', agent:'Turki Al-Otaibi',  customer:'متجر الصحة',           type:'Sales',      city:'الدمام', amount:'4,100', status:'completed' },
+  { date:'12 Dec 2024', time:'11:20', agent:'Nasser Al-Dosari', customer:'مركز جدة الطبي',       type:'Visit',      city:'جدة',    amount:'-',     status:'completed' },
+  { date:'12 Dec 2024', time:'16:00', agent:'Nasser Al-Dosari', customer:'صيدلية البحر',         type:'Sales',      city:'جدة',    amount:'1,950', status:'completed' },
+];
+
+let productsData = [
+  { name:'بروتين بار صحي (علبة 24)', sku:'SKU-001', price:120 },
+  { name:'عصير ديتوكس أخضر 1L',      sku:'SKU-002', price:45  },
+  { name:'كبسولات أوميغا-3 90ct',     sku:'SKU-003', price:89  },
+  { name:'جل صبار 500ml',             sku:'SKU-004', price:35  },
+  { name:'عسل طبيعي 1kg',             sku:'SKU-005', price:75  },
+  { name:'مسحوق كولاجين 300g',        sku:'SKU-006', price:160 },
+];
+
+let customersData = [
+  { name:'صيدلية النور',        city:'الرياض', type:'صيدلية' },
+  { name:'مركز صحة الطبي',      city:'الرياض', type:'عيادة'  },
+  { name:'متجر الحياة الخضراء', city:'جدة',    type:'متجر'   },
+  { name:'عيادة الشفاء',        city:'الرياض', type:'عيادة'  },
+  { name:'مركز ويلنس',          city:'الرياض', type:'متجر'   },
+  { name:'منفذ نيتشر كير',      city:'الدمام', type:'متجر'   },
+];
+
+const agentColors = ['#5B2D8E','#4ECBA4','#E8B84B','#F06B6B','#5BB8F5','#A67DD4','#F06B6B','#4ECBA4'];
+
+// ══ NAV ══
+const navConfig = {
+  admin:   [{label:'نظرة عامة',icon:'📊',screen:'dashboard'},{label:'المندوبون',icon:'👥',screen:'agents'},{label:'المهام',icon:'✅',screen:'tasks',badge:3},{label:'التقارير',icon:'📈',screen:'reports'},{section:'النظام'},{label:'الإعدادات',icon:'⚙️',screen:'settings'}],
+  manager: [{label:'لوحة التحكم',icon:'📊',screen:'dashboard'},{label:'فريقي',icon:'👥',screen:'agents'},{label:'المهام',icon:'✅',screen:'tasks',badge:3},{label:'التقارير',icon:'📈',screen:'reports'}],
+  agent:   [{label:'لوحتي',icon:'🏠',screen:'dashboard'},{label:'زيارة جديدة',icon:'📍',screen:'visits'},{label:'مهامي',icon:'✅',screen:'tasks',badge:2},{label:'تقاريري',icon:'📈',screen:'reports'}]
+};
+
+const screenTitles = {dashboard:'نظرة عامة',agents:'مندوبو المبيعات',visits:'تسجيل زيارة',tasks:'المهام والتكليفات',reports:'التقارير والإحصاءات',settings:'إعدادات النظام',empDetail:'تفاصيل المندوب'};
+
+// ══ LOGIN ══
+function selectRole(role,btn){
+  currentRole=role;
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function doLogin(){
+  const phone = document.getElementById('loginPhone').value.trim();
+  const pin   = document.getElementById('loginPass').value.trim();
+  const errEl = document.getElementById('loginError');
+
+  // admin check
+  if(phone===ADMIN_PHONE && pin===ADMIN_PIN && currentRole==='admin'){
+    errEl.style.display='none';
+    launchApp('admin','مدير النظام','مدير النظام');
+    return;
+  }
+  // agent check
+  const agent = agentsData.find(a=>a.phone===phone && a.pin===pin && a.status==='active');
+  if(agent){
+    errEl.style.display='none';
+    const role = currentRole==='manager'?'manager':'agent';
+    launchApp(role, agent.nameAr, role==='manager'?'مدير المبيعات':'مندوب ميداني');
+    return;
+  }
+  errEl.style.display='block';
+}
+
+function launchApp(role,name,roleLabel){
+  currentRole=role;
+  document.getElementById('loginScreen').style.display='none';
+  const shell=document.getElementById('appShell');
+  shell.classList.add('active'); shell.style.display='flex';
+  document.getElementById('sidebarAvatar').textContent=name.charAt(0);
+  document.getElementById('topbarAvatar').textContent=name.charAt(0);
+  document.getElementById('sidebarName').textContent=name;
+  document.getElementById('sidebarRole').textContent=roleLabel;
+  buildNav();
+  populateAll();
+  updateTimestamp(); setInterval(updateTimestamp,1000);
+  document.getElementById('dashDate').textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  showScreen('dashboard',true);
+}
+
+function doLogout(){
+  document.getElementById('appShell').style.display='none';
+  document.getElementById('appShell').classList.remove('active');
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginError').style.display='none';
+}
+
+// ══ NAV BUILD ══
+function buildNav(){
+  const nav=document.getElementById('sidebarNav'); nav.innerHTML='';
+  const tabs=document.getElementById('pageNavTabs'); tabs.innerHTML='';
+  const items=navConfig[currentRole]||navConfig.admin;
+  items.forEach(item=>{
+    if(item.section){
+      const l=document.createElement('div'); l.className='nav-section-label'; l.textContent=item.section; nav.appendChild(l);
+    } else {
+      const el=document.createElement('div'); el.className='nav-item'; el.id='nav-'+item.screen;
+      el.innerHTML=`<span class="nav-icon">${item.icon}</span>${item.label}${item.badge?`<span class="nav-badge">${item.badge}</span>`:''}`;
+      el.onclick=()=>showScreen(item.screen); nav.appendChild(el);
+      const tab=document.createElement('div'); tab.className='pnt'; tab.id='tab-'+item.screen;
+      tab.innerHTML=`${item.icon} ${item.label}${item.badge?`<span class="tb">${item.badge}</span>`:''}`;
+      tab.onclick=()=>showScreen(item.screen); tabs.appendChild(tab);
+    }
+  });
+}
+
+function showScreen(screen,isRoot=false){
+  if(screen!=='empDetail') screenHistory=[screen];
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.pnt').forEach(t=>t.classList.remove('active'));
+  const el=document.getElementById('screen-'+screen);
+  if(el) el.classList.add('active');
+  const nav=document.getElementById('nav-'+screen);
+  if(nav) nav.classList.add('active');
+  const tab=document.getElementById('tab-'+screen);
+  if(tab) tab.classList.add('active');
+  currentScreen=screen;
+  updateBreadcrumb(screen);
+}
+
+function goBack(){
+  if(screenHistory.length>1){ screenHistory.pop(); showScreen(screenHistory[screenHistory.length-1]); }
+  else showScreen('reports');
+}
+
+function updateBreadcrumb(screen){
+  const bc=document.getElementById('breadcrumbItems');
+  const bb=document.getElementById('backBtn');
+  if(screen==='empDetail'){
+    const agent=agentsData.find(a=>a.name===currentEmpName);
+    bc.innerHTML=`<span class="bc-item" onclick="showScreen('reports')">التقارير</span><span class="bc-sep">›</span><span class="bc-item active">${agent?agent.nameAr:'تفاصيل المندوب'}</span>`;
+    bb.classList.add('visible'); bb.textContent='← العودة للتقارير';
+  } else {
+    bc.innerHTML=`<span class="bc-item active">${screenTitles[screen]||screen}</span>`;
+    bb.classList.remove('visible');
+  }
+}
+
+// ══ POPULATE ALL ══
+function populateAll(){
+  populateAgentTable(); populateAgentsGrid(); populateTasks();
+  populateRankings(); populateProducts(); populateCustomers();
+  populateReportCards(); populateTopPerformers();
+  populateRegionsList(); populateRolesList();
+  populateSelectDropdowns();
+}
+
+function populateSelectDropdowns(){
+  // regions in customer modal
+  const cc=document.getElementById('newCustomerCity'); if(cc){cc.innerHTML=regionsData.map(r=>`<option>${r}</option>`).join('');}
+  // regions in visit form
+  const vr=document.getElementById('visitRegionSelect'); if(vr){vr.innerHTML=regionsData.map(r=>`<option>${r}</option>`).join('');}
+  // customers in visit
+  const vc=document.getElementById('visitCustomerSelect'); if(vc){vc.innerHTML='<option>-- اختر العميل --</option>'+customersData.map(c=>`<option>${c.name}</option>`).join('');}
+  // products in visit
+  const vp=document.getElementById('visitProductSelect'); if(vp){vp.innerHTML='<option>-- اختر منتج --</option>'+productsData.map(p=>`<option>${p.name}</option>`).join('');}
+  // agents in task
+  const ta=document.getElementById('taskAgentSelect'); if(ta){ta.innerHTML=agentsData.map(a=>`<option>${a.nameAr}</option>`).join('');}
+  // customers in task
+  const tc=document.getElementById('taskCustomerSelect'); if(tc){tc.innerHTML=customersData.map(c=>`<option>${c.name}</option>`).join('');}
+  // agent modal selects
+  const ar=document.getElementById('agentRegion'); if(ar){ar.innerHTML=regionsData.map(r=>`<option>${r}</option>`).join('');}
+  const ajr=document.getElementById('agentJobRole'); if(ajr){ajr.innerHTML=jobRolesData.map(r=>`<option>${r}</option>`).join('');}
+}
+
+// ══ AGENT TABLE ══
+function populateAgentTable(){
+  document.getElementById('agentTableBody').innerHTML=agentsData.map(a=>{
+    const pct=Math.round((a.visits/50)*100);
+    return `<tr><td><div style="display:flex;align-items:center;gap:9px;"><div class="user-avatar" style="width:30px;height:30px;font-size:11px;background:${a.color};border-radius:7px;">${a.nameAr.charAt(0)}</div><div><div style="font-weight:700;font-size:12.5px;">${a.nameAr}</div><div style="font-size:10px;color:var(--text-light);">${a.region}</div></div></div></td>
+    <td><span class="td-mono chip chip-purple">${a.id}</span></td>
+    <td><span class="td-mono">${a.visits}</span></td>
+    <td><span class="td-mono" style="color:var(--accent-mint);font-weight:600;">${a.sales.toLocaleString()}</span></td>
+    <td><span class="td-mono">${a.collections.toLocaleString()}</span></td>
+    <td><div style="display:flex;align-items:center;gap:6px;"><div class="progress-track" style="width:65px;"><div class="progress-fill" style="width:${pct}%;background:${a.color};"></div></div><span class="td-mono" style="font-size:10px;">${pct}%</span></div></td>
+    <td><span class="status-badge ${a.status==='active'?'completed':'cancelled'}"><span class="status-dot"></span>${a.status==='active'?'نشط':'غير نشط'}</span></td></tr>`;
+  }).join('');
+}
+
+function filterTable(val){
+  document.querySelectorAll('#agentTableBody tr').forEach(row=>{
+    row.style.display=row.textContent.toLowerCase().includes(val.toLowerCase())?'':'none';
+  });
+}
+
+// ══ AGENTS GRID (with edit/delete) ══
+function populateAgentsGrid(){
+  document.getElementById('agentsGrid').innerHTML=agentsData.map((a,i)=>`
+    <div class="agent-card">
+      <div class="agent-card-top">
+        <div class="agent-avatar-lg" style="background:linear-gradient(135deg,${a.color},${a.color}88);">${a.nameAr.charAt(0)}</div>
+        <div class="agent-card-info"><div class="agent-name">${a.nameAr}</div><div class="agent-code">${a.id} · ${a.region} · ${a.phone}</div></div>
+        ${a.status==='active'?`<div class="agent-online-badge"><div class="online-dot"></div>نشط</div>`:''}
+      </div>
+      <div class="agent-stats">
+        <div class="agent-stat"><div class="agent-stat-val">${a.visits}</div><div class="agent-stat-label">زيارة</div></div>
+        <div class="agent-stat"><div class="agent-stat-val" style="color:var(--accent-mint)">${(a.sales/1000).toFixed(0)}K</div><div class="agent-stat-label">مبيعات</div></div>
+        <div class="agent-stat"><div class="agent-stat-val" style="color:var(--accent-gold)">${(a.collections/1000).toFixed(0)}K</div><div class="agent-stat-label">تحصيل</div></div>
+      </div>
+      <div class="agent-actions">
+        <button class="btn-edit" onclick="editAgent(${i})">✏️ تعديل</button>
+        <button class="btn-del" onclick="deleteAgent(${i})">🗑️ حذف</button>
+      </div>
+    </div>`).join('');
+}
+
+// ══ SAVE / EDIT / DELETE AGENT ══
+function openAddAgentForm(){
+  editingAgentIndex=-1;
+  document.getElementById('modalAgentTitle').textContent='إضافة مندوب جديد';
+  document.getElementById('editAgentId').value='';
+  ['agentNameAr','agentNameEn','agentId','agentPhone','agentPin'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('agentStatus').value='active';
+  populateSelectDropdowns();
+  openModal('modalAddAgent');
+}
+
+function editAgent(i){
+  editingAgentIndex=i;
+  const a=agentsData[i];
+  document.getElementById('modalAgentTitle').textContent='تعديل بيانات المندوب';
+  document.getElementById('agentNameAr').value=a.nameAr;
+  document.getElementById('agentNameEn').value=a.name;
+  document.getElementById('agentId').value=a.id;
+  document.getElementById('agentPhone').value=a.phone;
+  document.getElementById('agentPin').value=a.pin;
+  document.getElementById('agentStatus').value=a.status;
+  populateSelectDropdowns();
+  document.getElementById('agentRegion').value=a.region;
+  document.getElementById('agentJobRole').value=a.jobRole;
+  openModal('modalAddAgent');
+}
+
+function saveAgent(){
+  const nameAr=document.getElementById('agentNameAr').value.trim();
+  const nameEn=document.getElementById('agentNameEn').value.trim();
+  const id=document.getElementById('agentId').value.trim();
+  const phone=document.getElementById('agentPhone').value.trim();
+  const pin=document.getElementById('agentPin').value.trim();
+  const region=document.getElementById('agentRegion').value;
+  const jobRole=document.getElementById('agentJobRole').value;
+  const status=document.getElementById('agentStatus').value;
+  if(!nameAr||!phone||!pin){showToast('⚠️ يُرجى ملء الحقول المطلوبة');return;}
+  const color=agentColors[agentsData.length%agentColors.length];
+  if(editingAgentIndex>=0){
+    agentsData[editingAgentIndex]={...agentsData[editingAgentIndex],nameAr,name:nameEn,id,phone,pin,region,jobRole,status};
+    showToast('✅ تم تحديث بيانات المندوب');
+  } else {
+    agentsData.push({id,name:nameEn,nameAr,region,phone,pin,jobRole,visits:0,sales:0,collections:0,color,status});
+    showToast('✅ تمت إضافة المندوب بنجاح');
+  }
+  closeModal('modalAddAgent');
+  populateAll();
+}
+
+function deleteAgent(i){
+  if(!confirm(`هل تريد حذف المندوب "${agentsData[i].nameAr}"؟`))return;
+  agentsData.splice(i,1);
+  populateAll();
+  showToast('🗑️ تم حذف المندوب');
+}
+
+// ══ TASKS ══
+function populateTasks(){
+  const icons={'زيارة عميل':'📍','هدف مبيعات':'🛒','تحصيل':'💵','مكالمة متابعة':'📞','مسح ميداني':'📋'};
+  const statusAr={pending:'معلق',completed:'مكتمل',inprogress:'جارٍ',cancelled:'ملغي'};
+  const agentMap={}; agentsData.forEach(a=>{agentMap[a.name]=a.nameAr;});
+  document.getElementById('taskList').innerHTML=tasksData.map(t=>`
+    <div class="task-item ${t.priority}">
+      <div class="task-icon">${icons[t.type]||'📌'}</div>
+      <div class="task-info">
+        <div class="task-title">${t.type} — ${t.customer}</div>
+        <div class="task-meta">مكلف إلى <strong>${agentMap[t.agent]||t.agent}</strong> · الاستحقاق: ${t.due} · ${t.instructions}</div>
+      </div>
+      <div class="task-actions">
+        <span class="status-badge ${t.status}">${statusAr[t.status]||t.status}</span>
+        ${t.priority==='urgent'?'<span class="chip chip-gold">⚡ عاجل</span>':''}
+      </div>
+    </div>`).join('');
+}
+
+function addTask(){closeModal('modalAddTask');showToast('✅ تم تكليف المهمة بنجاح!');}
+
+// ══ RANKINGS ══
+function populateRankings(){
+  const sorted=[...agentsData].sort((a,b)=>b.sales-a.sales).slice(0,5);
+  const max=sorted[0].sales;
+  document.getElementById('agentRankings').innerHTML=sorted.map((a,i)=>`
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-label"><span>${i+1}. ${a.nameAr}</span><span>SAR ${a.sales.toLocaleString()}</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${(a.sales/max)*100}%;background:${a.color};"></div></div>
+    </div>`).join('');
+}
+
+// ══ TOP PERFORMERS ══
+function populateTopPerformers(){
+  const byVisits=[...agentsData].sort((a,b)=>b.visits-a.visits)[0];
+  const bySales=[...agentsData].sort((a,b)=>b.sales-a.sales)[0];
+  const byCollect=[...agentsData].sort((a,b)=>b.collections-a.collections)[0];
+  const maxV=Math.max(...agentsData.map(a=>a.visits));
+  const maxS=Math.max(...agentsData.map(a=>a.sales));
+  const maxC=Math.max(...agentsData.map(a=>a.collections));
+
+  document.getElementById('topPerformersGrid').innerHTML=`
+    <div class="performer-card" style="--pc:${byVisits.color}">
+      <div class="performer-header">
+        <div class="performer-avatar" style="background:${byVisits.color};">${byVisits.nameAr.charAt(0)}</div>
+        <div><div class="performer-title">🏆 أكثر مندوب زيارات</div><div class="performer-name">${byVisits.nameAr}</div></div>
+        <div class="performer-badge">📍</div>
+      </div>
+      <div class="performer-stat">${byVisits.visits}</div>
+      <div class="performer-stat-label">زيارة هذا الشهر</div>
+      <div class="performer-bar-wrap">
+        <div class="performer-bar"><div class="performer-bar-fill" style="width:${(byVisits.visits/maxV)*100}%;background:${byVisits.color};"></div></div>
+      </div>
+    </div>
+    <div class="performer-card" style="--pc:var(--accent-mint)">
+      <div class="performer-header">
+        <div class="performer-avatar" style="background:var(--accent-mint);">${bySales.nameAr.charAt(0)}</div>
+        <div><div class="performer-title">🥇 أكثر مندوب مبيعات</div><div class="performer-name">${bySales.nameAr}</div></div>
+        <div class="performer-badge">🛒</div>
+      </div>
+      <div class="performer-stat">SAR ${(bySales.sales/1000).toFixed(0)}K</div>
+      <div class="performer-stat-label">إجمالي المبيعات</div>
+      <div class="performer-bar-wrap">
+        <div class="performer-bar"><div class="performer-bar-fill" style="width:${(bySales.sales/maxS)*100}%;background:var(--accent-mint);"></div></div>
+      </div>
+    </div>
+    <div class="performer-card" style="--pc:var(--accent-gold)">
+      <div class="performer-header">
+        <div class="performer-avatar" style="background:var(--accent-gold);">${byCollect.nameAr.charAt(0)}</div>
+        <div><div class="performer-title">💰 أكثر مندوب تحصيل</div><div class="performer-name">${byCollect.nameAr}</div></div>
+        <div class="performer-badge">💵</div>
+      </div>
+      <div class="performer-stat">SAR ${(byCollect.collections/1000).toFixed(0)}K</div>
+      <div class="performer-stat-label">إجمالي التحصيلات</div>
+      <div class="performer-bar-wrap">
+        <div class="performer-bar"><div class="performer-bar-fill" style="width:${(byCollect.collections/maxC)*100}%;background:var(--accent-gold);"></div></div>
+      </div>
+    </div>`;
+}
+
+// ══ PRODUCTS ══
+function populateProducts(){
+  document.getElementById('productsBody').innerHTML=productsData.map((p,i)=>`
+    <tr><td><strong>${p.name}</strong></td><td><span class="td-mono chip chip-purple">${p.sku}</span></td>
+    <td><span class="td-mono">SAR ${p.price}</span></td>
+    <td><button class="btn-del" onclick="deleteProduct(${i})">✕</button></td></tr>`).join('');
+}
+
+function addProduct(){
+  const name=document.getElementById('newProductName').value.trim();
+  const sku=document.getElementById('newProductSku').value.trim();
+  const price=parseFloat(document.getElementById('newProductPrice').value)||0;
+  if(!name){showToast('⚠️ أدخل اسم المنتج');return;}
+  productsData.push({name,sku,price});
+  closeModal('modalAddProduct');
+  populateProducts(); populateSelectDropdowns();
+  showToast('✅ تمت إضافة المنتج!');
+}
+
+function deleteProduct(i){
+  productsData.splice(i,1); populateProducts(); populateSelectDropdowns();
+  showToast('🗑️ تم حذف المنتج');
+}
+
+// ══ CUSTOMERS ══
+function populateCustomers(){
+  const tc={صيدلية:'chip-purple',عيادة:'chip-mint',متجر:'chip-gold',موزع:'chip-sky',مستشفى:'chip-coral'};
+  document.getElementById('customersBody').innerHTML=customersData.map((c,i)=>`
+    <tr><td><strong>${c.name}</strong></td><td>${c.city}</td>
+    <td><span class="chip ${tc[c.type]||'chip-purple'}">${c.type}</span></td>
+    <td><button class="btn-del" onclick="deleteCustomer(${i})">✕</button></td></tr>`).join('');
+}
+
+function addCustomer(){
+  const name=document.getElementById('newCustomerName').value.trim();
+  const city=document.getElementById('newCustomerCity').value;
+  const type=document.getElementById('newCustomerType').value;
+  if(!name){showToast('⚠️ أدخل اسم العميل');return;}
+  customersData.push({name,city,type});
+  closeModal('modalAddCustomer');
+  populateCustomers(); populateSelectDropdowns();
+  showToast('✅ تمت إضافة العميل!');
+}
+
+function deleteCustomer(i){
+  customersData.splice(i,1); populateCustomers(); populateSelectDropdowns();
+  showToast('🗑️ تم حذف العميل');
+}
+
+// ══ REGIONS ══
+function populateRegionsList(){
+  document.getElementById('regionsList').innerHTML=regionsData.map((r,i)=>`
+    <div class="settings-list-item">
+      <div class="item-name">${r}</div>
+      <button class="btn-del" onclick="deleteRegion(${i})">✕ حذف</button>
+    </div>`).join('');
+}
+
+function addRegion(){
+  const val=document.getElementById('newRegionInput').value.trim();
+  if(!val||regionsData.includes(val)){showToast('⚠️ المنطقة موجودة أو الحقل فارغ');return;}
+  regionsData.push(val);
+  document.getElementById('newRegionInput').value='';
+  populateRegionsList(); populateSelectDropdowns();
+  showToast('✅ تمت إضافة المنطقة');
+}
+
+function deleteRegion(i){
+  regionsData.splice(i,1); populateRegionsList(); populateSelectDropdowns();
+  showToast('🗑️ تم حذف المنطقة');
+}
+
+// ══ JOB ROLES ══
+function populateRolesList(){
+  document.getElementById('rolesList').innerHTML=jobRolesData.map((r,i)=>`
+    <div class="settings-list-item">
+      <div class="item-name">${r}</div>
+      <button class="btn-del" onclick="deleteJobRole(${i})">✕ حذف</button>
+    </div>`).join('');
+}
+
+function addJobRole(){
+  const val=document.getElementById('newRoleInput').value.trim();
+  if(!val||jobRolesData.includes(val)){showToast('⚠️ المسمى موجود أو الحقل فارغ');return;}
+  jobRolesData.push(val);
+  document.getElementById('newRoleInput').value='';
+  populateRolesList(); populateSelectDropdowns();
+  showToast('✅ تمت إضافة المسمى الوظيفي');
+}
+
+function deleteJobRole(i){
+  jobRolesData.splice(i,1); populateRolesList(); populateSelectDropdowns();
+  showToast('🗑️ تم حذف المسمى الوظيفي');
+}
+
+// ══ REPORT CARDS ══
+let reportDateFrom=null, reportDateTo=null;
+
+function parseActivityDate(dateStr){
+  const months={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const [d,m,y]=dateStr.split(' ');
+  return new Date(parseInt(y),months[m],parseInt(d));
+}
+
+function filterByDate(acts,from,to){
+  if(!from&&!to)return acts;
+  return acts.filter(a=>{
+    const d=parseActivityDate(a.date);
+    if(from&&d<new Date(from))return false;
+    if(to&&d>new Date(to+'T23:59:59'))return false;
+    return true;
+  });
+}
+
+function filterReportCards(){
+  reportDateFrom=document.getElementById('reportDateFrom').value||null;
+  reportDateTo=document.getElementById('reportDateTo').value||null;
+  populateReportCards(); populateTopPerformers();
+}
+
+function resetReportDates(){
+  document.getElementById('reportDateFrom').value='';
+  document.getElementById('reportDateTo').value='';
+  reportDateFrom=reportDateTo=null;
+  populateReportCards(); populateTopPerformers();
+}
+
+function populateReportCards(){
+  const grid=document.getElementById('reportEmpGrid'); if(!grid)return;
+  const allF=filterByDate(activitiesData,reportDateFrom,reportDateTo);
+  document.getElementById('r-visits').textContent=allF.filter(a=>a.type==='Visit').length||agentsData.reduce((s,a)=>s+a.visits,0);
+  document.getElementById('r-sales').textContent=allF.filter(a=>a.type==='Sales').length||83;
+  document.getElementById('r-collections').textContent=allF.filter(a=>a.type==='Collection').length||26;
+
+  grid.innerHTML=agentsData.map(a=>{
+    const acts=filterByDate(activitiesData.filter(x=>x.agent===a.name),reportDateFrom,reportDateTo);
+    const visits=acts.filter(x=>x.type==='Visit').length;
+    const salesV=acts.reduce((s,x)=>s+(x.type==='Sales'&&x.amount!=='-'?parseInt(x.amount.replace(/,/g,'')):0),0);
+    const colV=acts.reduce((s,x)=>s+(x.type==='Collection'&&x.amount!=='-'?parseInt(x.amount.replace(/,/g,'')):0),0);
+    const dv=reportDateFrom||reportDateTo?visits:a.visits;
+    const ds=salesV>0?(salesV/1000).toFixed(1)+'K':(a.sales/1000).toFixed(0)+'K';
+    const dc=colV>0?(colV/1000).toFixed(1)+'K':(a.collections/1000).toFixed(0)+'K';
+    return `<div class="report-emp-card" style="--ec:${a.color}" onclick="openEmpDetail('${a.name}')">
+      <div class="report-emp-card-top">
+        <div class="report-emp-avatar" style="background:${a.color};">${a.nameAr.charAt(0)}</div>
+        <div><div class="report-emp-name">${a.nameAr}</div><div class="report-emp-id">${a.id} · ${a.region}</div></div>
+      </div>
+      <div class="report-emp-stats">
+        <div class="report-emp-stat"><div class="report-emp-stat-val">${dv}</div><div class="report-emp-stat-label">زيارة</div></div>
+        <div class="report-emp-stat"><div class="report-emp-stat-val" style="color:var(--accent-mint)">${ds}</div><div class="report-emp-stat-label">مبيعات</div></div>
+        <div class="report-emp-stat"><div class="report-emp-stat-val" style="color:var(--accent-gold)">${dc}</div><div class="report-emp-stat-label">تحصيل</div></div>
+      </div>
+      <div class="report-emp-card-footer">
+        <span>${a.status==='active'?'🟢 نشط':'🔴 غير نشط'}</span>
+        <span class="view-btn">عرض العمليات ←</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══ EMP DETAIL ══
+function openEmpDetail(agentName){
+  currentEmpName=agentName;
+  const a=agentsData.find(x=>x.name===agentName); if(!a)return;
+  document.getElementById('edAvatar').textContent=a.nameAr.charAt(0);
+  document.getElementById('edAvatar').style.background=a.color;
+  document.getElementById('edName').textContent=a.nameAr;
+  document.getElementById('edSub').textContent=`${a.id} · ${a.region} · ${a.phone}`;
+  document.getElementById('edTableTitle').textContent=`عمليات ${a.nameAr}`;
+  document.getElementById('edKpis').innerHTML=`
+    <div class="emp-kpi"><div class="emp-kpi-val">${a.visits}</div><div class="emp-kpi-label">📍 إجمالي الزيارات</div></div>
+    <div class="emp-kpi"><div class="emp-kpi-val" style="color:var(--accent-mint)">SAR ${a.sales.toLocaleString()}</div><div class="emp-kpi-label">🛒 إجمالي المبيعات</div></div>
+    <div class="emp-kpi"><div class="emp-kpi-val" style="color:var(--accent-gold)">SAR ${a.collections.toLocaleString()}</div><div class="emp-kpi-label">💵 إجمالي التحصيلات</div></div>`;
+  document.getElementById('edDateFrom').value='';
+  document.getElementById('edDateTo').value='';
+  renderEmpDetailTable();
+  screenHistory=['reports','empDetail'];
+  showScreen('empDetail');
+}
+
+function resetEmpDates(){
+  document.getElementById('edDateFrom').value='';
+  document.getElementById('edDateTo').value='';
+  renderEmpDetailTable();
+}
+
+function renderEmpDetailTable(){
+  const from=document.getElementById('edDateFrom').value||null;
+  const to=document.getElementById('edDateTo').value||null;
+  const tC={Visit:'chip-purple',Sales:'chip-mint',Collection:'chip-gold'};
+  const tA={Visit:'زيارة',Sales:'مبيعات',Collection:'تحصيل'};
+  const sA={completed:'مكتمل',pending:'معلق',cancelled:'ملغي',inprogress:'جارٍ'};
+  let acts=filterByDate(activitiesData.filter(a=>a.agent===currentEmpName),from,to);
+  document.getElementById('edCount').textContent=`${acts.length} عملية`;
+  if(!acts.length){document.getElementById('edTableBody').innerHTML=`<tr><td colspan="6" style="text-align:center;padding:36px;color:var(--text-light);">لا توجد عمليات في هذه الفترة</td></tr>`;return;}
+  document.getElementById('edTableBody').innerHTML=acts.map(a=>`
+    <tr><td><span class="td-mono">${a.date} ${a.time}</span></td><td><strong>${a.customer}</strong></td>
+    <td><span class="chip ${tC[a.type]||'chip-purple'}">${tA[a.type]||a.type}</span></td><td>${a.city}</td>
+    <td><span class="td-mono" style="color:${a.amount!=='-'?'var(--accent-mint)':'var(--text-light)'};">${a.amount!=='-'?'SAR '+a.amount:'—'}</span></td>
+    <td><span class="status-badge ${a.status}"><span class="status-dot"></span>${sA[a.status]||a.status}</span></td></tr>`).join('');
+}
+
+// ══ EXCEL IMPORT ══
+function importExcel(type){
+  currentImportType=type;
+  document.getElementById('excelFileInput').click();
+}
+
+function handleExcelImport(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try {
+      const wb=XLSX.read(ev.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws);
+      if(currentImportType==='products'){
+        data.forEach(row=>{
+          if(row['اسم المنتج']||row['name']){
+            productsData.push({name:row['اسم المنتج']||row['name']||'',sku:row['الكود']||row['sku']||'',price:parseFloat(row['السعر']||row['price'])||0});
+          }
+        });
+        populateProducts(); populateSelectDropdowns();
+        showToast(`✅ تم استيراد ${data.length} منتج`);
+      } else if(currentImportType==='customers'){
+        data.forEach(row=>{
+          if(row['اسم العميل']||row['name']){
+            customersData.push({name:row['اسم العميل']||row['name']||'',city:row['المدينة']||row['city']||'الرياض',type:row['النوع']||row['type']||'متجر'});
+          }
+        });
+        populateCustomers(); populateSelectDropdowns();
+        showToast(`✅ تم استيراد ${data.length} عميل`);
+      }
+    } catch(err){showToast('❌ خطأ في قراءة الملف');}
+    e.target.value='';
+  };
+  reader.readAsBinaryString(file);
+}
+
+// ══ EXCEL EXPORT ══
+function exportReportExcel(){
+  const data=agentsData.map(a=>({'الاسم':a.nameAr,'الكود':a.id,'المنطقة':a.region,'الجوال':a.phone,'الزيارات':a.visits,'المبيعات (ريال)':a.sales,'التحصيلات (ريال)':a.collections,'الحالة':a.status==='active'?'نشط':'غير نشط'}));
+  downloadExcel(data,'تقرير_المندوبين');
+}
+
+function exportEmpDetailExcel(){
+  const from=document.getElementById('edDateFrom').value||null;
+  const to=document.getElementById('edDateTo').value||null;
+  const tA={Visit:'زيارة',Sales:'مبيعات',Collection:'تحصيل'};
+  const sA={completed:'مكتمل',pending:'معلق',cancelled:'ملغي',inprogress:'جارٍ'};
+  const acts=filterByDate(activitiesData.filter(a=>a.agent===currentEmpName),from,to);
+  const data=acts.map(a=>({'التاريخ':a.date,'الوقت':a.time,'العميل':a.customer,'النوع':tA[a.type]||a.type,'المدينة':a.city,'المبلغ':a.amount!=='-'?a.amount:'—','الحالة':sA[a.status]||a.status}));
+  downloadExcel(data,`عمليات_${currentEmpName}`);
+}
+
+function exportProductsExcel(){
+  const data=productsData.map(p=>({'اسم المنتج':p.name,'الكود':p.sku,'السعر (ريال)':p.price}));
+  downloadExcel(data,'المنتجات');
+}
+
+function exportCustomersExcel(){
+  const data=customersData.map(c=>({'اسم العميل':c.name,'المدينة':c.city,'النوع':c.type}));
+  downloadExcel(data,'العملاء');
+}
+
+function downloadExcel(data,filename){
+  const ws=XLSX.utils.json_to_sheet(data);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'البيانات');
+  XLSX.writeFile(wb,filename+'.xlsx');
+  showToast('📥 جارٍ تحميل الملف...');
+}
+
+// ══ VISIT FORM ══
+function selectVisitType(type){
+  ['visit','sales','collect'].forEach(t=>document.getElementById('vt-'+t).classList.remove('active'));
+  document.getElementById('vt-'+type).classList.add('active');
+  document.getElementById('visitFields').style.display=type==='visit'?'':'none';
+  document.getElementById('salesFields').style.display=type==='sales'?'':'none';
+  document.getElementById('collectFields').style.display=type==='collect'?'':'none';
+}
+
+function updateTimestamp(){
+  const now=new Date();
+  const el=document.getElementById('currentTimestamp');
+  if(el) el.textContent='🕐 '+now.toLocaleDateString('ar-SA',{day:'2-digit',month:'short',year:'numeric'})+' · '+now.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function addProductLine(){
+  const c=document.getElementById('productLines');
+  const d=document.createElement('div'); d.className='product-line';
+  d.innerHTML=`<div class="product-line-name"><select style="border:none;background:transparent;font-family:var(--font-body);font-size:13px;outline:none;width:100%;">${productsData.map(p=>`<option>${p.name}</option>`).join('')}</select></div>
+  <div class="product-qty-control"><button class="qty-btn" onclick="changeQty(this,-1)">−</button><span class="qty-val">1</span><button class="qty-btn" onclick="changeQty(this,1)">+</button></div>
+  <div style="font-family:var(--font-mono);font-size:13px;color:var(--purple-brand);min-width:80px;">SAR 120</div>
+  <button onclick="this.parentNode.remove()" style="border:none;background:none;cursor:pointer;color:var(--accent-coral);font-size:15px;">✕</button>`;
+  c.appendChild(d);
+}
+
+function changeQty(btn,delta){
+  const v=btn.parentNode.querySelector('.qty-val');
+  v.textContent=Math.max(1,parseInt(v.textContent)+delta);
+}
+
+function saveVisit(){showToast('✅ تم حفظ النشاط بنجاح!');}
+
+// ══ MODAL ══
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});
+});
+
+// ══ TOAST ══
+function showToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ══ CHART TABS ══
+document.querySelectorAll('.chart-tab').forEach(tab=>{
+  tab.addEventListener('click',function(){
+    this.parentNode.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// init
+updateTimestamp();
+</script>
+</body>
+</html>
