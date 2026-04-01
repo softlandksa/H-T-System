@@ -1697,26 +1697,21 @@ function onExpChange(input, uid){
   if(!input.value){ estEl.textContent=''; return; }
   const {label,color}=getExpiryStatus(input.value);
   estEl.textContent=label; estEl.style.color=color;
-  // حفظ في المنتج محلياً
+  // حفظ محلي فقط — الحفظ في Supabase يتم عند saveVisit
   const card=input.closest('.pl-card');
   const prodName=card?.dataset.prod||document.getElementById('pl-nm-'+uid)?.textContent;
   const prod=data.products.find(p=>p.name===prodName);
-  if(prod){
-    prod.expiry=input.value;
-    if(state.screen==='expiry') buildExpiry();
-    // حفظ في Supabase
-    saveExpiryToSB(prod);
-  }
+  if(prod) prod.expiry=input.value;
 }
 
 async function saveExpiryToSB(prod){
+  // هذه الدالة للاستخدام من الإعدادات فقط (إضافة منتج مع صلاحية)
+  // أما في البيع فيتم الحفظ من saveVisit مباشرة
   if(!prod.expiry) return;
   const sbData = { product_name:prod.name, product_sku:prod.sku||'', expiry_date:prod.expiry, updated_at:new Date().toISOString() };
   if(prod.expiry_id){
-    // تحديث موجود
     await sbQ(`/rest/v1/product_expiry?id=eq.${prod.expiry_id}`, 'PATCH', sbData);
   } else {
-    // إضافة جديد
     const res = await sbQ('/rest/v1/product_expiry', 'POST', sbData);
     if(res && res[0]) prod.expiry_id = res[0].id;
   }
@@ -1792,9 +1787,10 @@ async function saveVisit(){
     if(!amt||parseFloat(amt)<=0){ toast('⚠️ أدخل مبلغ التحصيل'); document.getElementById('vCollAmt').focus(); return; }
   }
 
-  // توليد الرقم المرجعي
-  const refEl = document.getElementById('vRef');
-  const refNum = refEl?.dataset.ref || genRef(type);
+  // استخدام الرقم المرجعي المعروض بالفعل (لا توليد رقم جديد)
+  const refEl  = document.getElementById('vRef');
+  let refNum   = refEl?.dataset.ref || '';
+  if(!refNum){ refNum = genRef(type); if(refEl){ refEl.textContent='#'+refNum; refEl.dataset.ref=refNum; } }
 
   let amount='-';
   if(type==='Sales'){      const v=document.getElementById('vSalesAmt')?.value; if(v) amount=v; }
@@ -1844,7 +1840,7 @@ async function saveVisit(){
   }
 
   // شروط الدفع
-  const paymentMethod = document.querySelector('#vf-sales select')?.value||'نقداً';
+  const paymentSel = document.querySelector('#vf-sales .g2c select'); const paymentMethod = paymentSel?.value||'نقداً';
 
   // ══ حفظ النشاط الرئيسي ══
   const sbData={
